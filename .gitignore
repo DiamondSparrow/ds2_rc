@@ -1,0 +1,14 @@
+*.crf
+Projects/Keil/Objects/adc_11u6x.d
+*.o
+*.d
+Projects/Keil/Objects/ExtDll.iex
+*.lnp
+*.Diamond
+Projects/Keil/Listings/keil_startup_lpc11u6x.lst
+*.axf
+Projects/Keil/Objects/ds2_rc.htm
+*.sct
+Projects/Keil/Objects/ds2_rc_Target 1.dep
+Projects/Keil/Objects/ds2_rc.build_log.htm
+*.map
