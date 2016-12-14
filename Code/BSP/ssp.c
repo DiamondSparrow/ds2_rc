@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file         bsp.c
+ * @file         ssp.c
  * @author       Diamond Sparrow
  * @version      1.0.0.0
- * @date         2016-04-10
- * @brief        This is C source file template.
+ * @date         2016-08-30
+ * @brief        SSP C source file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -21,13 +21,11 @@
  * Includes
  *********************************************************************************************************************/
 #include <stdint.h>
+#include <string.h>
 
 #include "chip.h"
 
-#include "bsp.h"
-#include "gpio.h"
 #include "ssp.h"
-#include "uart.h"
 
 /**********************************************************************************************************************
  * Private constants
@@ -44,6 +42,9 @@
 /**********************************************************************************************************************
  * Private variables
  *********************************************************************************************************************/
+/* SPI Transfer Setup */
+static Chip_SSP_DATA_SETUP_T ssp_0_xfer;
+static SSP_ConfigFormat ssp_0_format;
 
 /**********************************************************************************************************************
  * Exported variables
@@ -56,20 +57,62 @@
 /**********************************************************************************************************************
  * Exported functions
  *********************************************************************************************************************/
-void bsp_init(void)
+void ssp_0_init(void)
 {
-    SystemCoreClockUpdate();
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 9, (IOCON_FUNC1 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // MOSI, P0.9
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 8, (IOCON_FUNC1 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // MISO, P0.8
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 6, (IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // SCK,  P0.6
 
-    /* Enable SWM and IOCON clocks */
-    Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
+    Chip_SSP_Init(LPC_SSP0);
 
-    gpio_init();
-    ssp_0_init();
-    uart_0_init();
+    ssp_0_format.frameFormat = SSP_FRAMEFORMAT_SPI;
+    ssp_0_format.bits = SSP_BITS_8;
+    ssp_0_format.clockMode = SSP_CLOCK_MODE0;
+    Chip_SSP_SetFormat(LPC_SSP0, ssp_0_format.bits, ssp_0_format.frameFormat, ssp_0_format.clockMode);
+    Chip_SSP_SetMaster(LPC_SSP0, 1);
+    Chip_SSP_SetBitRate(LPC_SSP0, 12000000);
+    Chip_SSP_Enable(LPC_SSP0);
+
+    NVIC_DisableIRQ(SSP0_IRQn);
 
     return;
 }
 
-/**********************************************************************************************************************
+void ssp_0_read_buffer(uint8_t *buffer, uint16_t size)
+{
+    Chip_SSP_ReadFrames_Blocking(LPC_SSP0, buffer, size);
+
+    return;
+}
+
+void ssp_0_write_buffer(uint8_t *buffer, uint16_t size)
+{
+    //Chip_SSP_WriteFrames_Blocking(LPC_SSP0, buffer, size);
+    while(size--)
+    {
+        LPC_SSP0->DR = *buffer;
+        while(LPC_SSP0->SR & SSP_STAT_BSY);
+        LPC_SSP0->DR;
+        buffer++;
+    }
+
+    return;
+}
+
+void ssp_0_write_read(uint8_t *tx, uint16_t tx_size, uint8_t *rx, uint16_t rx_size)
+{
+    ssp_0_xfer.tx_data = tx;   /* Transmit Buffer */
+    ssp_0_xfer.rx_data = rx;   /* Receive Buffer */
+    ssp_0_xfer.length = tx_size + rx_size;  /* Total frame length */
+    ssp_0_xfer.tx_cnt = 0;
+    ssp_0_xfer.rx_cnt = 0;
+
+    Chip_SSP_RWFrames_Blocking(LPC_SSP0, &ssp_0_xfer);
+
+    return;
+}
+
+/**
+ * ********************************************************************************************************************
  * Private functions
  *********************************************************************************************************************/

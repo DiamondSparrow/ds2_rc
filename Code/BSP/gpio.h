@@ -43,6 +43,8 @@ extern "C" {
 typedef enum
 {
     GPIO_LED_STATUS,
+    GPIO_DISPLAY_SELECT,
+    GPIO_DISPLAY_DC,
     GPIO_LAST,
 } gpio_t;
 

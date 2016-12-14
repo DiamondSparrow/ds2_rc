@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file         bsp.c
- * @author       Diamond Sparrow
- * @version      1.0.0.0
- * @date         2016-04-10
- * @brief        This is C source file template.
+ * @file        fonts.h
+ * @author      Diamond Sparrow
+ * @version     1.0.0.0
+ * @date        2016-08-29
+ * @brief       This is C header file template.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -17,59 +17,71 @@
  **********************************************************************************************************************
  */
 
+#ifndef FONTS_H_
+#define FONTS_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
-#include <stdint.h>
-
-#include "chip.h"
-
-#include "bsp.h"
-#include "gpio.h"
-#include "ssp.h"
-#include "uart.h"
 
 /**********************************************************************************************************************
- * Private constants
+ * Exported constants
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
- * Private definitions and macros
+ * Exported definitions and macros
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
- * Private typedef
+ * Exported types
  *********************************************************************************************************************/
 
-/**********************************************************************************************************************
- * Private variables
- *********************************************************************************************************************/
-
-/**********************************************************************************************************************
- * Exported variables
- *********************************************************************************************************************/
-
-/**********************************************************************************************************************
- * Prototypes of local functions
- *********************************************************************************************************************/
-
-/**********************************************************************************************************************
- * Exported functions
- *********************************************************************************************************************/
-void bsp_init(void)
+/**
+ * @brief   Font structure used on my LCD libraries
+ */
+typedef struct
 {
-    SystemCoreClockUpdate();
+    uint8_t font_width;     /*!< Font width in pixels */
+    uint8_t font_height;    /*!< Font height in pixels */
+    const uint16_t *data;   /*!< Pointer to data font data array */
+} fonts_t;
 
-    /* Enable SWM and IOCON clocks */
-    Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
-
-    gpio_init();
-    ssp_0_init();
-    uart_0_init();
-
-    return;
-}
+/**
+ * @brief   String length and height
+ */
+typedef struct
+{
+    uint16_t length;    /*!< String length in units of pixels */
+    uint16_t height;    /*!< String height in units of pixels */
+} fonts_size_t;
 
 /**********************************************************************************************************************
- * Private functions
+ * Prototypes of exported variables
  *********************************************************************************************************************/
+extern fonts_t fonts_7x10;
+extern fonts_t fonts_11x18;
+extern fonts_t fonts_16x26;
+
+/**********************************************************************************************************************
+ * Prototypes of exported functions
+ *********************************************************************************************************************/
+/**
+ * @brief   Calculates string length and height in units of pixels depending on string and font used.
+ *
+ * @param   str         String to be checked for length and height.
+ * @param   font_size   Pointer to empty @ref fonts_size_t structure where informations will be saved.
+ * @param   font        Pointer to @ref font_size font used for calculations.
+ *
+ * @retval  Pointer to string used for length and height.
+ */
+uint8_t *fonts_get_string_size(uint8_t *str, fonts_size_t *font_size, fonts_t *font);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* FONTS_H_ */

@@ -24,15 +24,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "chip.h"
 #include "cmsis_os.h"
 
 #include "app.h"
+#include "bsp.h"
 #include "debug.h"
 #include "indication.h"
-#include "bsp.h"
 
 #include "cli/cli_app.h"
+#include "display/display.h"
 
 /**********************************************************************************************************************
  * Private constants
@@ -72,7 +72,6 @@ osThreadId app_thread_id;
  */
 int main(void)
 {
-    SystemCoreClockUpdate();
     bsp_init();
     indication_set_blocking(INDICATION_BOOT);
     DEBUG_BOOT("");
@@ -81,7 +80,7 @@ int main(void)
     DEBUG_BOOT("    \\   '-' '-'   / ");
     DEBUG_BOOT("    '-..__ __..-'    ");
     DEBUG_BOOT("          /_\\       ");
-    DEBUG_BOOT(" # DS-2 Controller #");
+    DEBUG_BOOT(" # DS-2 Remote Controller #");
     DEBUG_BOOT(" * Booting.");
     DEBUG_BOOT("Build ....... %s %s", __DATE__, __TIME__);
     DEBUG_BOOT("Core Clock .. %ld Hz.", SystemCoreClock);
@@ -105,7 +104,6 @@ int main(void)
     }
     DEBUG_BOOT("APP ......... ok.");
 
-
     // Start kernel.
     if(osKernelStart() != osOK)
     {
@@ -116,14 +114,19 @@ int main(void)
 
 void app_thread(void const *arg)
 {
+    uint32_t c = 0;
+    bool ret = false;
+
     debug_init();
     DEBUG_INIT(" * Initializing.");
     indication_set_blocking(INDICATION_INIT);
-    indication_init();
-
-    DEBUG_INIT("Indication .. ok.");
-    cli_app_init();
-    DEBUG_INIT("CLI APP ..... ok.");
+    
+    ret = indication_init();
+    DEBUG_INIT("Indication .. %s.", ret ? "ok" : "err");
+    ret = cli_app_init();
+    DEBUG_INIT("CLI APP ..... %s.", ret ? "ok" : "err");
+    ret = display_init();
+    DEBUG_INIT("Display ..... %s.", ret == false ? "err" : "ok");
 
     DEBUG(" * Running.");
     indication_set(INDICATION_IDLE);
@@ -132,6 +135,17 @@ void app_thread(void const *arg)
     while(1)
     {
         osDelay(1000);
+
+        c++;
+        if(c == 5)
+        {
+            display_turn_off();
+        }
+        if(c == 10)
+        {
+            display_turn_on();
+            c = 0;
+        }
     }
 }
 
