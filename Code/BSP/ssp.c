@@ -44,7 +44,6 @@
  *********************************************************************************************************************/
 /* SPI Transfer Setup */
 static Chip_SSP_DATA_SETUP_T ssp_0_xfer;
-static SSP_ConfigFormat ssp_0_format;
 
 /**********************************************************************************************************************
  * Exported variables
@@ -65,10 +64,7 @@ void ssp_0_init(void)
 
     Chip_SSP_Init(LPC_SSP0);
 
-    ssp_0_format.frameFormat = SSP_FRAMEFORMAT_SPI;
-    ssp_0_format.bits = SSP_BITS_8;
-    ssp_0_format.clockMode = SSP_CLOCK_MODE0;
-    Chip_SSP_SetFormat(LPC_SSP0, ssp_0_format.bits, ssp_0_format.frameFormat, ssp_0_format.clockMode);
+    Chip_SSP_SetFormat(LPC_SSP0, SSP_FRAMEFORMAT_SPI, SSP_BITS_8, SSP_CLOCK_MODE0);
     Chip_SSP_SetMaster(LPC_SSP0, 1);
     Chip_SSP_SetBitRate(LPC_SSP0, 12000000);
     Chip_SSP_Enable(LPC_SSP0);
@@ -108,6 +104,84 @@ void ssp_0_write_read(uint8_t *tx, uint16_t tx_size, uint8_t *rx, uint16_t rx_si
     ssp_0_xfer.rx_cnt = 0;
 
     Chip_SSP_RWFrames_Blocking(LPC_SSP0, &ssp_0_xfer);
+
+    return;
+}
+
+void ssp_1_init(void)
+{
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 21, (IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // MOSI, P0.21
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 21, (IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // MISO, P1.21
+    Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 27, (IOCON_FUNC4 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // SCK,  P1.27
+    //Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 23, (IOCON_FUNC2 | IOCON_MODE_INACT | IOCON_DIGMODE_EN)); // SSEL, P1.23
+
+    Chip_SSP_Init(LPC_SSP1);
+
+    Chip_SSP_SetFormat(LPC_SSP1, SSP_FRAMEFORMAT_SPI, SSP_BITS_8, SSP_CLOCK_MODE0);
+    Chip_SSP_SetMaster(LPC_SSP1, 1);
+    Chip_SSP_SetBitRate(LPC_SSP1, 8000000);
+    Chip_SSP_Enable(LPC_SSP1);
+
+    NVIC_DisableIRQ(SSP1_IRQn);
+
+    return;
+}
+
+void ssp_1_send_byte(uint8_t data)
+{
+    /* Put the data on the FIFO */
+    LPC_SSP1->DR = data;
+
+    /* Wait for sending to complete */
+    while((LPC_SSP1->SR & 0x10));
+
+    data = LPC_SSP1->DR;
+
+    return;
+}
+
+void ssp_1_send_buffer(uint8_t *buffer, uint32_t size)
+{
+    while(size--)
+    {
+        /* Put the data on the FIFO */
+        LPC_SSP1->DR = *buffer;
+        buffer++;
+
+        /* Wait for sending to complete */
+        while((LPC_SSP1->SR & 0x10));
+
+        LPC_SSP1->DR;
+    }
+
+    return;
+}
+
+uint8_t ssp_1_recv_byte(void)
+{
+    /* Put the data on the FIFO */
+    LPC_SSP1->DR = 0xFF;
+
+    /* Wait for sending to complete */
+    while((LPC_SSP1->SR & 0x10));
+
+    /* Return the received value */
+    return (LPC_SSP1->DR);
+}
+
+void ssp_1_recv_buffer(uint8_t *buffer, uint32_t size)
+{
+    while(size--)
+    {
+        /* Put the data on the FIFO */
+        LPC_SSP1->DR = 0xFF;
+
+        /* Wait for sending to complete */
+        while((LPC_SSP1->SR & 0x10));
+
+        *buffer = LPC_SSP1->DR;
+        buffer++;
+    }
 
     return;
 }

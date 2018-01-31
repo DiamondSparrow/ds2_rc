@@ -51,9 +51,11 @@ typedef struct
  *********************************************************************************************************************/
 const gpio_item_t gpio_list[GPIO_LAST] =
 {
-    {.port = 2, .pin = 19, .dir = true, .state = false,},  // GPIO_LED_STATUS
-    {.port = 0, .pin = 7, .dir = true, .state = false,},   // GPIO_DISPLAY_SELECT
-    {.port = 1, .pin = 28, .dir = true, .state = false,},  // GPIO_DISPLAY_DC
+    {.port = 2, .pin = 19, .dir = true, .state = false,},   // GPIO_LED_STATUS
+    {.port = 0, .pin = 7, .dir = true, .state = false,},    // GPIO_DISPLAY_SELECT
+    {.port = 1, .pin = 28, .dir = true, .state = false,},   // GPIO_DISPLAY_DC
+    {.port = 2, .pin = 6, .dir = true, .state = true,},     // GPIO_NRF24L01_CE
+    {.port = 1, .pin = 23, .dir = true, .state = true,},    // GPIO_NRF24L01_CSN
 };
 
 /**********************************************************************************************************************

@@ -45,6 +45,8 @@ typedef enum
     GPIO_LED_STATUS,
     GPIO_DISPLAY_SELECT,
     GPIO_DISPLAY_DC,
+    GPIO_NRF24L01_CE,
+    GPIO_NRF24L01_CSN,
     GPIO_LAST,
 } gpio_t;
 

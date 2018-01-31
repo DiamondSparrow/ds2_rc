@@ -52,6 +52,12 @@ void ssp_0_read_buffer(uint8_t *buffer, uint16_t size);
 void ssp_0_write_buffer(uint8_t *buffer, uint16_t size);
 void ssp_0_write_read(uint8_t *tx, uint16_t tx_size, uint8_t *rx, uint16_t rx_size);
 
+void ssp_1_init(void);
+void ssp_1_send_byte(uint8_t data);
+void ssp_1_send_buffer(uint8_t *buffer, uint32_t size);
+uint8_t ssp_1_recv_byte(void);
+void ssp_1_recv_buffer(uint8_t *buffer, uint32_t size);
+
 #ifdef __cplusplus
 }
 #endif

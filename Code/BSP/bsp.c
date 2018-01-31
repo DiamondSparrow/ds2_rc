@@ -65,6 +65,7 @@ void bsp_init(void)
 
     gpio_init();
     ssp_0_init();
+    ssp_1_init();
     uart_0_init();
 
     return;
