@@ -102,6 +102,34 @@ void debug_send_os(const char *fmt, ...)
     return;
 }
 
+void debug_send_hex_os(uint8_t *buffer, uint16_t size)
+{
+    uint16_t i = 0;
+    uint16_t c = 0;
+
+    if (osSemaphoreWait(debug_lock_id, DEBUG_LOCK_TIMEOUT) >= 0)
+    {
+        for(i = 0; i < size; i++)
+        {
+            if((c + 8) >= DEBUG_BUFFER_SIZE)
+            {
+                break;
+            }
+            if(i > 0)
+            {
+                c += snprintf((char*)&debug_buffer[c], (DEBUG_BUFFER_SIZE - c), ",%02X", buffer[i]);
+            }
+            else
+            {
+                c += snprintf((char*)&debug_buffer[c], (DEBUG_BUFFER_SIZE - c), "[%02X", buffer[i]);
+            }
+        }
+        c += snprintf((char*)&debug_buffer[c], (DEBUG_BUFFER_SIZE - c), "]\r\n");
+        uart_0_send(debug_buffer, c);
+        osSemaphoreRelease(debug_lock_id);
+    }
+}
+
 void debug_send_blocking(uint8_t *data, uint32_t size)
 {
     uart_0_send(data, size);

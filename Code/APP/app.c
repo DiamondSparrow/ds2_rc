@@ -112,14 +112,14 @@ int main(void)
         app_error();
     }
 }
-#define RADIO_MODE  1   // 1 - RX, 0 - TX
+
 void app_thread(void const *arg)
 {
-    //uint32_t c = 0;
+    uint32_t i = 0;
     uint8_t ret = 0;
-#if RADIO_MODE
+    uint8_t count = 0;
     uint8_t data[32] = {0};
-#endif
+
     debug_init();
     DEBUG_INIT(" * Initializing.");
     indication_set_blocking(INDICATION_INIT);
@@ -130,48 +130,71 @@ void app_thread(void const *arg)
     DEBUG_INIT("CLI APP ..... %s.", ret ? "ok" : "err");
     //ret = display_init();
     //DEBUG_INIT("Display ..... %s.", ret == false ? "err" : "ok");
-    nrf24l01_init(1, 4);
-    nrf24l01_set_my_address((uint8_t []){0xD7,0xD7,0xD7,0xD7,0xD7});
 
-    nrf24l01_set_tx_address((uint8_t []){0xE7,0xE7,0xE7,0xE7,0xE});
+    nrf24l01_init(1, 32);
+    nrf24l01_set_my_address((uint8_t []){0xD7,0xD7,0xD7,0xD7,0xD7});
+    nrf24l01_set_tx_address((uint8_t []){0xE7,0xE7,0xE7,0xE7,0xE7});
 
     DEBUG(" * Running.");
     indication_set(INDICATION_IDLE);
     DEBUG("State: idle.");
-    
-#if RADIO_MODE
-    nrf24l01_power_up_rx();
-#else
-    nrf24l01_transmit((uint8_t []){0x01, 0x02, 0x03, 0x04});
-#endif
+
     while(1)
     {
-#if RADIO_MODE
-        osDelay(10);
-        if(nrf24l01_data_ready())
+        for (i = 1; i < 32; i++)
         {
-            nrf24l01_get_data(data);
-            DEBUG("Data: %02X,%02X,%02X,%02X", data[0], data[1], data[2], data[3]);
-            memset(data, 0, sizeof(data));
-            nrf24l01_power_up_rx();
+            data[i] = i;
         }
-#else
-        osDelay(1000);
-        ret = nrf24l01_get_tx_status();
-        if(ret == NRF24L01_TX_STATUS_OK || ret == NRF24L01_TX_STATUS_LOST)
+        nrf24l01_transmit(data);
+        while(1)
         {
-            DEBUG_INIT("NRF24L01 TX status %02X", ret);
-            nrf24l01_transmit((uint8_t []){0x01, 0x02, 0x03, 0x04});
+            osDelay(1);
+            ret = nrf24l01_get_tx_status();
+            if(ret != NRF24L01_TX_STATUS_SENDING)
+            {
+                break;
+            }
         }
-#endif
-        /*
+        switch(ret)
+        {
+            case NRF24L01_TX_STATUS_OK:
+                count = nrf24l01_get_retransmissions_count();
+                DEBUG("Transmit: OK (0x%02X, %d).", ret, count);
+                nrf24l01_power_up_rx();
+                osDelay(10);
+                count = 10;
+                while(1)
+                {
+                    osDelay(1);
+                    if(nrf24l01_data_ready())
+                    {
+                        nrf24l01_get_data(data);
+                        DEBUG("Received data:");
+                        debug_send_hex_os(data, 32);
+                        data[0]++;
+                        break;
+                    }
+                    count--;
+                    if(!count)
+                    {
+                        DEBUG("No response.");
+                        break;
+                    }
+                }
+                break;
+            case NRF24L01_TX_STATUS_LOST:
+                count = nrf24l01_get_retransmissions_count();
+                DEBUG_INIT("Transmit: LOST (0x%02X, %d).", ret, count);
+                break;
+            case NRF24L01_TX_STATUS_SENDING:
+                DEBUG_INIT("Transmit: SENDING (0x%02X, %d).", ret, count);
+                break;
+            default:
+                DEBUG_INIT("Transmit: ERROR (0x%02X).", ret);
+                break;
+        }
         osDelay(1000);
-        ret = nrf24l01_get_status();
-        DEBUG_INIT("NRF24L01 status %02X", ret);
-        nrf24l01_transmit((uint8_t []){0x01, 0x02, 0x03, 0x04});
-        ret = nrf24l01_get_tx_status();
-        DEBUG_INIT("NRF24L01 TX status %02X", ret);
-        */
+
 /*
         c++;
         if(c == 5)
