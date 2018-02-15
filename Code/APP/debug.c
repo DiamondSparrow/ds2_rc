@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file         debug.c
- * @author       Diamond Sparrow
- * @version      1.0.0.0
- * @date         2016-04-10
- * @brief        This is C source file template.
+ * @file        debug.c
+ * @author      Diamond Sparrow
+ * @version     1.0.0.0
+ * @date        2016-04-10
+ * @brief       Debug C source file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -26,27 +26,26 @@
 #include <stdarg.h>
 
 #include "bsp.h"
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 
 #include "debug.h"
 
 /**********************************************************************************************************************
- * Private constants
- *********************************************************************************************************************/
-
-/**********************************************************************************************************************
  * Private definitions and macros
  *********************************************************************************************************************/
-osSemaphoreDef(debug_lock);
 
 /**********************************************************************************************************************
  * Private typedef
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
+ * Private constants
+ *********************************************************************************************************************/
+
+/**********************************************************************************************************************
  * Private variables
  *********************************************************************************************************************/
-osSemaphoreId debug_lock_id;
+osSemaphoreId_t debug_lock_id;
 uint8_t debug_buffer[DEBUG_BUFFER_SIZE] = {0};
 
 /**********************************************************************************************************************
@@ -62,7 +61,7 @@ uint8_t debug_buffer[DEBUG_BUFFER_SIZE] = {0};
  *********************************************************************************************************************/
 bool debug_init(void)
 {
-    if((debug_lock_id = osSemaphoreCreate(osSemaphore(debug_lock), 1)) == NULL)
+    if((debug_lock_id = osSemaphoreNew(1, 1, 0)) == NULL)
     {
         return false;
     }
@@ -89,7 +88,7 @@ void debug_send_os(const char *fmt, ...)
     uint16_t i = 0;
     va_list args;
 
-    if (osSemaphoreWait(debug_lock_id, DEBUG_LOCK_TIMEOUT) >= 0)
+    if (osSemaphoreAcquire(debug_lock_id, DEBUG_LOCK_TIMEOUT) == osOK)
     {
         va_start(args, fmt);
         i = vsnprintf((char*)debug_buffer, DEBUG_BUFFER_SIZE - 1, fmt, args);
@@ -107,7 +106,7 @@ void debug_send_hex_os(uint8_t *buffer, uint16_t size)
     uint16_t i = 0;
     uint16_t c = 0;
 
-    if (osSemaphoreWait(debug_lock_id, DEBUG_LOCK_TIMEOUT) >= 0)
+    if(osSemaphoreAcquire(debug_lock_id, DEBUG_LOCK_TIMEOUT) == osOK)
     {
         for(i = 0; i < size; i++)
         {

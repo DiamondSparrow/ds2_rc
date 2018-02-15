@@ -29,16 +29,12 @@ extern "C" {
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
- * Exported constants
+ * Exported definitions and macros
  *********************************************************************************************************************/
 #define INDICATION_LED_RED      0       //!< Read LED PIN configuration.
 #define INDICATION_LED_GREEN    1       //!< Green LED PIN configuration.
 #define INDICATION_LED_BLUE     2       //!< Blue LED PIN configuration.
 #define INDICATION_PERIOD       1000UL  //!< Indication control period in ms.
-
-/**********************************************************************************************************************
- * Exported definitions and macros
- *********************************************************************************************************************/
 
 /**********************************************************************************************************************
  * Exported types
@@ -56,6 +52,11 @@ typedef enum
     INDICATION_IDLE,   //!< Indication for idle mode.
     INDICATION_FAULT,  //!< Indication for fault mode.
 } indication_t;
+
+
+/**********************************************************************************************************************
+ * Prototypes of exported constants
+ *********************************************************************************************************************/
 
 /**********************************************************************************************************************
  * Prototypes of exported variables
@@ -92,7 +93,7 @@ void indication_set_blocking(indication_t indication);
  *
  * @param   arg Pointer to timer arguments.
  */
-void indication_handle(void const *arg);
+void indication_handle(void *arguments);
 
 #ifdef __cplusplus
 }

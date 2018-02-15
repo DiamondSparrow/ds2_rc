@@ -12,3 +12,7 @@ Projects/Keil/Objects/ds2_rc.htm
 Projects/Keil/Objects/ds2_rc_Target 1.dep
 Projects/Keil/Objects/ds2_rc.build_log.htm
 *.map
+/Projects/Keil/Objects/*.bin
+/Projects/Keil/Objects/*.hex
+/Projects/Keil/Objects/*.dep
+/Projects/Keil/*.deimantas

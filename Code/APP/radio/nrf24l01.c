@@ -23,11 +23,12 @@
 #include <stdint.h>
 
 #include "nrf24l01.h"
-#include "ssp.h"
-#include "gpio.h"
+#include "periph/ssp.h"
+#include "periph/gpio.h"
+
 
 /**********************************************************************************************************************
- * Private constants
+ * Private definitions and macros
  *********************************************************************************************************************/
 /** NRF24L01+ registers: */
 #define NRF24L01_REG_CONFIG         0x00    //!< Configuration register.
@@ -144,14 +145,11 @@
 #define NRF24L01_R_RX_PL_WID_MASK           0x60
 #define NRF24L01_NOP_MASK                   0xFF
 
-/**********************************************************************************************************************
- * Private definitions and macros
- *********************************************************************************************************************/
 /** Pins configuration */
-#define NRF24L01_CE_LOW             gpio_output_low(GPIO_NRF24L01_CE)
-#define NRF24L01_CE_HIGH            gpio_output_high(GPIO_NRF24L01_CE)
-#define NRF24L01_CSN_LOW            gpio_output_low(GPIO_NRF24L01_CSN)
-#define NRF24L01_CSN_HIGH           gpio_output_high(GPIO_NRF24L01_CSN)
+#define NRF24L01_CE_LOW             gpio_output_low(GPIO_ID_NRF24L01_CE)
+#define NRF24L01_CE_HIGH            gpio_output_high(GPIO_ID_NRF24L01_CE)
+#define NRF24L01_CSN_LOW            gpio_output_low(GPIO_ID_NRF24L01_CSN)
+#define NRF24L01_CSN_HIGH           gpio_output_high(GPIO_ID_NRF24L01_CSN)
 
 /** Clear interrupt flags */
 #define NRF24L01_CLEAR_INTERRUPTS   do { nrf24l01_write_register(NRF24L01_REG_STATUS, 0x70); } while (0)
@@ -163,7 +161,6 @@
 #define NRF24L01_FLUSH_TX           do { NRF24L01_CSN_LOW; ssp_1_send_byte(NRF24L01_FLUSH_TX_MASK); NRF24L01_CSN_HIGH; } while (0)
 /** Flush RX FIFO. */
 #define NRF24L01_FLUSH_RX           do { NRF24L01_CSN_LOW; ssp_1_send_byte(NRF24L01_FLUSH_RX_MASK); NRF24L01_CSN_HIGH; } while (0)
-
 
 /**********************************************************************************************************************
  * Private typedef
@@ -178,6 +175,10 @@ typedef struct
     nrf24l01_tx_power_t tx_power;   //!< Output power, see @ref nrf24l01_tx_power_t.
     nrf24l01_data_rate_t data_rate; //!< Data rate, see @ref nrf24l01_data_rate_t.
 } nrf24l01_cfg_t;
+
+/**********************************************************************************************************************
+ * Private constants
+ *********************************************************************************************************************/
 
 /**********************************************************************************************************************
  * Private variables

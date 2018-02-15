@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file         cli_app.c
- * @author       Diamond Sparrow
- * @version      1.0.0.0
- * @date         2016-04-06
- * @brief        Command Line Interface C source file.
+ * @file        cli_app.c
+ * @author      Diamond Sparrow
+ * @version     1.0.0.0
+ * @date        2016-04-06
+ * @brief       Command Line Interface (CLI) applicatoin C source file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -25,14 +25,13 @@
 #include <string.h>
 
 
-#include "cmsis_os.h"
-
 #include "cli_app.h"
 #include "cli_cmd.h"
 #include "cli.h"
 
-#include "debug.h"
 #include "bsp.h"
+#include "cmsis_os2.h"
+#include "debug.h"
 
 /**********************************************************************************************************************
  * Private constants
@@ -40,11 +39,17 @@
 #define CLI_APP_RX_SIZE     128
 #define CLI_APP_TX_SIZE     128
 
+/** CLI application thread attributes. */
+const osThreadAttr_t cli_app_thread_attr =
+{
+    .name = "CLI_APP",
+    .stack_size = 512,
+    .priority = osPriorityNormal,
+};
+
 /**********************************************************************************************************************
  * Private definitions and macros
  *********************************************************************************************************************/
-/** Define CLI application thread */
-osThreadDef(cli_app_thread, osPriorityNormal, 1, 512);
 
 /**********************************************************************************************************************
  * Private typedef
@@ -54,7 +59,7 @@ osThreadDef(cli_app_thread, osPriorityNormal, 1, 512);
  * Private variables
  *********************************************************************************************************************/
 /** Application thread ID. */
-osThreadId cli_app_thread_id;
+osThreadId_t cli_app_thread_id;
 uint8_t cli_app_rx_data[CLI_APP_RX_SIZE] = {0};
 uint8_t cli_app_tx_data[CLI_APP_RX_SIZE] = {0};
 
@@ -75,7 +80,7 @@ bool cli_app_init(void)
     cli_init();
 
     // Create application thread.
-    if((cli_app_thread_id = osThreadCreate(osThread(cli_app_thread), NULL)) == NULL)
+    if((cli_app_thread_id = osThreadNew(&cli_app_thread, NULL, &cli_app_thread_attr)) == NULL)
     {
         return false;
     }
@@ -83,11 +88,9 @@ bool cli_app_init(void)
     return true;
 }
 
-void cli_app_thread(void const *arg)
+void cli_app_thread(void *arguments)
 {
     uint32_t rx_count = 0;
-
-    cli_cmd_register();
 
     while(1)
     {

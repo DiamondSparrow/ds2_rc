@@ -3,8 +3,8 @@
  * @file        display_menu.h
  * @author      Diamond Sparrow
  * @version     1.0.0.0
- * @date        2016-12-14
- * @brief       This is C header file template.
+ * @date        2018-02-12
+ * @brief       Display menu C header file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -27,10 +27,10 @@ extern "C" {
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
+#include <stdint.h>
+#include <stdbool.h>
 
-/**********************************************************************************************************************
- * Exported constants
- *********************************************************************************************************************/
+#include "display/display.h"
 
 /**********************************************************************************************************************
  * Exported definitions and macros
@@ -49,6 +49,9 @@ typedef struct
     bool init;
 } display_menu_t;
 
+/**********************************************************************************************************************
+ * Prototypes of exported constants
+ *********************************************************************************************************************/
 
 /**********************************************************************************************************************
  * Prototypes of exported variables
@@ -61,7 +64,7 @@ void display_menu_init(display_menu_id_t id, uint32_t period, display_menu_cb_t 
 
 void display_menu_cb_welcome(display_menu_id_t id);
 void display_menu_cb_clock(display_menu_id_t id);
-void display_menu_cb_joystick(display_menu_id_t id);
+void display_menu_cb_radio(display_menu_id_t id);
 void display_menu_cb_info(display_menu_id_t id);
 
 #ifdef __cplusplus
