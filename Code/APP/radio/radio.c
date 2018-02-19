@@ -36,8 +36,8 @@
  *********************************************************************************************************************/
 #define RADIO_CHANNEL           1
 #define RADIO_PAYLAOD_SIZE      32
-#define RADIO_TRANSMIT_TMO_MS   10  //!< Radio data transmit timeout in millisecons.
-#define RADIO_RECEIVE_TMO_MS    10  //!< Radio data receive timeout in millisecons.
+#define RADIO_TRANSMIT_TMO_MS   10  //!< Radio data transmit timeout in milliseconds.
+#define RADIO_RECEIVE_TMO_MS    10  //!< Radio data receive timeout in milliseconds.
 
 /**********************************************************************************************************************
  * Private typedef
@@ -100,8 +100,6 @@ void radio_thread(void *arguments)
     nrf24l01_init(RADIO_CHANNEL, RADIO_PAYLAOD_SIZE);
     nrf24l01_set_my_address((uint8_t *)radio_my_address);
     nrf24l01_set_tx_address((uint8_t *)radio_peer_address);
-
-    nrf24l01_power_up_rx();
 
     while(1)
     {

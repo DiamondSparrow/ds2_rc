@@ -45,10 +45,10 @@ typedef struct
     uint32_t tx_counter;        /**< Transmit packet counter. */
     uint32_t tx_lost_counter;   /**< Lost transmit packet counter. */
     uint32_t rx_counter;        /**< Received packet counter. */
-    uint32_t rtr_acumulator;    /**< Accumulated retransmited packet counter. */
-    uint32_t rtr_current;       /**< Current packer restransmisions count. */
+    uint32_t rtr_acumulator;    /**< Accumulated retransmitted packet counter. */
+    uint32_t rtr_current;       /**< Current packer retransmissions count. */
     uint32_t rtr;               /**< Retransmissions quality indicator from 0 to 15. 0 - no lost, 15 - all lost. */
-    uint32_t quality;           /**< Retransmisiont quality in percentage, from 0 - 100 %. */
+    uint32_t quality;           /**< Retransmissions quality in percentage, from 0 - 100 %. */
 } radio_data_t;
 
 /**********************************************************************************************************************
