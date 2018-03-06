@@ -39,7 +39,8 @@ extern "C" {
  *********************************************************************************************************************/
 typedef enum
 {
-    DISPLAY_MENU_ID_WELCOME,
+    DISPLAY_MENU_ID_WELCOME = 0,
+    DISPLAY_MENU_ID_MAIN    = 1,
     DISPLAY_MENU_ID_RADIO,
     DISPLAY_MENU_ID_INFO,
     DISPLAY_MENU_ID_LAST,
@@ -74,6 +75,12 @@ void display_turn_off(void);
  * @brief   Turn on display.
  */
 void display_turn_on(void);
+
+/**
+ * @brief   Keep display one.
+ *          Should be called periodically if need to keep display on.
+ */
+void display_keep_on(void);
 
 /**
  * @brief   Get display power state.

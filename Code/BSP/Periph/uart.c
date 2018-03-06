@@ -29,9 +29,9 @@
 /**********************************************************************************************************************
  * Private definitions and macros
  *********************************************************************************************************************/
-#define UART_0_BAUDRATE         115200
-#define UART_0_RX_BUFFER_SIZE   128
-#define UART_0_TX_BUFFER_SIZE   512
+#define UART_0_BAUDRATE         115200  //!< UART 0 baudrate.
+#define UART_0_RX_BUFFER_SIZE   128     //!< Receive buffer size in bytes.
+#define UART_0_TX_BUFFER_SIZE   512     //!< Transmit buffer size in bytes.
 
 /**********************************************************************************************************************
  * Private typedef
@@ -44,10 +44,13 @@
 /**********************************************************************************************************************
  * Private variables
  *********************************************************************************************************************/
-/* Transmit and receive ring buffers */
+/** Transmit ring buffers */
 __IO RINGBUFF_T uart0_tx_rb;
+/** Receive ring buffers */
 __IO RINGBUFF_T uart0_rx_rb;
+/** Receive buffer. See @ref UART_0_RX_BUFFER_SIZE. */
 uint8_t uart_0_rx_buffer[UART_0_RX_BUFFER_SIZE];
+/** Transmit buffer. See @ref UART_0_TX_BUFFER_SIZE. */
 uint8_t uart_0_tx_buffer[UART_0_TX_BUFFER_SIZE];
 
 /**********************************************************************************************************************

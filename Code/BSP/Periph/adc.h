@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file        uart.h
+ * @file        adc.h
  * @author      Diamond Sparrow
  * @version     1.0.0.0
- * @date        2016-04-10
- * @brief       This is C header file template.
+ * @date        2017-04-11
+ * @brief       ADC C header file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -17,8 +17,8 @@
  **********************************************************************************************************************
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef ADC_H_
+#define ADC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,15 +32,32 @@ extern "C" {
 /**********************************************************************************************************************
  * Exported definitions and macros
  *********************************************************************************************************************/
+#define ADC_CLK                 4400000     //!< 1000000, set to 4.4Mhz
+#define ADC_VREF                3300.0F     //!< Reference voltage in mV.
+#define ADC_RESOLUTION          4096.0F     //!< ADC resolution 12 bit.
+#define ADC_LLS_SLOPE           (-2.36)     //!< Temperature sensor LLS slope value in volts.
+#define ADC_LLS_INTERCEPT       (606.0)     //!< Temperature sensor LLS intercept value.
+#define ADC_AVG_COUNT           100         //!< Average count.
 
 /**********************************************************************************************************************
  * Exported types
  *********************************************************************************************************************/
+/**
+ * @brief   ADC channels enumerator.
+ */
+typedef enum
+{
+    ADC_ID_JOYSTICK_LEFT_X  = 0,    //!< Joystick left X axis channel.
+    ADC_ID_JOYSTICK_LEFT_Y  = 1,    //!< Joystick left Y axis channel.
+    ADC_ID_JOYSTICK_RIGHT_X = 2,    //!< Joystick right X axis channel.
+    ADC_ID_JOYSTICK_RIGHT_Y = 3,    //!< Joystick right Y axis channel.
+    ADC_ID_LAST,                    //!< Last should stay last!
+} adc_id_t;
 
 /**********************************************************************************************************************
  * Prototypes of exported constants
  *********************************************************************************************************************/
-    
+
 /**********************************************************************************************************************
  * Prototypes of exported variables
  *********************************************************************************************************************/
@@ -49,38 +66,30 @@ extern "C" {
  * Prototypes of exported functions
  *********************************************************************************************************************/
 /**
- * @brief   Initialize UART 0.
+ * @brief   Initialize ADC.
  */
-void uart_0_init(void);
+void adc_init(void);
 
 /**
- * @brief   Send data through UART 0 in blocking way.
+ * @brief   Read ADC value in raw.
  *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
+ * @param   id  ADC channel ID. See @ref adc_id_t.
+ *
+ * @return  ADC value in raw.
  */
-void uart_0_send(uint8_t *data, uint32_t size);
+uint32_t adc_read_raw(adc_id_t id);
 
 /**
- * @brief   Send data through UART 0 using ring buffer (via IRQ).
+ * @brief   Read ADC value.
  *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send_rb(uint8_t *data, uint32_t size);
+ * @param   id  ADC channel ID. See @ref adc_id_t.
 
-/**
- * @brief   Read data from UART 0 using ring buffer (visa IRQ).
- *
- * @param   data    Pointer where to store received data.
- * @param   size    Size of data in bytes to receive.
- *
- * @return  Actual received data size.
+ * @return  ADC value in millivolts (0 - 3000). If failure - 0xFFFFFFFF.
  */
-uint32_t uart_0_read_rb(uint8_t *data, uint32_t size);
+uint32_t adc_read_volt(adc_id_t id);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* ADC_H_ */

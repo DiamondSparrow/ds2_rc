@@ -32,6 +32,8 @@
 
 #include "app.h"
 #include "radio/radio.h"
+#include "sensors/sensors.h"
+#include "sensors/joystick.h"
 
 #include "bsp.h"
 
@@ -124,12 +126,45 @@ void display_menu_cb_welcome(display_menu_id_t id)
 {
     ssd1306_goto_xy(40, 20);
     ssd1306_puts((uint8_t *)"DS-2", &fonts_11x18, SSD1306_COLOR_WHITE);
-    ssd1306_goto_xy(25, 40);
-    ssd1306_puts((uint8_t *)"Controller", &fonts_7x10, SSD1306_COLOR_WHITE);
+    ssd1306_goto_xy(15, 40);
+    ssd1306_puts((uint8_t *)"Remote Control", &fonts_7x10, SSD1306_COLOR_WHITE);
 
     ssd1306_update_screen();
 
     return;
+}
+
+void display_menu_cb_main(display_menu_id_t id)
+{
+    uint8_t tmp[DISPLAY_MENU_LINE_LENGTH] = {0};
+
+    display_menu_header(id, (uint8_t *)"Main");
+
+    switch(app_rc_mode_get())
+    {
+        case APP_RC_MODE_STANDBY:
+            snprintf((char *)tmp, DISPLAY_MENU_LINE_LENGTH, "STA: standby");
+            break;
+        case APP_RC_MODE_IDLE:
+            snprintf((char *)tmp, DISPLAY_MENU_LINE_LENGTH, "STA: idle");
+            break;
+    }
+    ssd1306_goto_xy(DISPLAY_MENU_LINE_X, DISPLAY_MENU_LINE_Y_1);
+    ssd1306_puts(tmp, &fonts_7x10, SSD1306_COLOR_WHITE);
+
+    snprintf((char *)tmp, DISPLAY_MENU_LINE_LENGTH, "VEC: %d %d     ",
+            sensors_data.joystick_1.magnitude,
+            sensors_data.joystick_1.direction);
+    ssd1306_goto_xy(DISPLAY_MENU_LINE_X, DISPLAY_MENU_LINE_Y_2);
+    ssd1306_puts(tmp, &fonts_7x10, SSD1306_COLOR_WHITE);
+
+
+    snprintf((char *)tmp, DISPLAY_MENU_LINE_LENGTH, "COM: %d %%      ",
+            radio_data.quality);
+    ssd1306_goto_xy(DISPLAY_MENU_LINE_X, DISPLAY_MENU_LINE_Y_3);
+    ssd1306_puts(tmp, &fonts_7x10, SSD1306_COLOR_WHITE);
+
+    ssd1306_update_screen();
 }
 
 void display_menu_cb_radio(display_menu_id_t id)

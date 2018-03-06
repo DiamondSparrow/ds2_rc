@@ -48,11 +48,24 @@ extern "C" {
 /**********************************************************************************************************************
  * Prototypes of exported functions
  *********************************************************************************************************************/
+/**
+ * @brief   Initialize SSP 0.
+ */
 void ssp_0_init(void);
+
+/**
+ * @brief   Read data from SSP 0.
+ *
+ * @param   buffer  Pointer where read data should be stored.
+ * @param   size    Size of data to read in bytes.
+ */
 void ssp_0_read_buffer(uint8_t *buffer, uint16_t size);
 void ssp_0_write_buffer(uint8_t *buffer, uint16_t size);
 void ssp_0_write_read(uint8_t *tx, uint16_t tx_size, uint8_t *rx, uint16_t rx_size);
 
+/**
+ * @brief   Initialize SSP 1.
+ */
 void ssp_1_init(void);
 void ssp_1_send_byte(uint8_t data);
 void ssp_1_send_buffer(uint8_t *buffer, uint32_t size);

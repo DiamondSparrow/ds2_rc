@@ -4,7 +4,7 @@
  * @author      Diamond Sparrow
  * @version     1.0.0.0
  * @date        2016-04-10
- * @brief       This is C header file template.
+ * @brief       DEbug C header file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -33,14 +33,13 @@ extern "C" {
 /**********************************************************************************************************************
  * Exported definitions and macros
  *********************************************************************************************************************/
-#define DEBUG_BUFFER_SIZE   256
-#define DEBUG_LOCK_TIMEOUT  1000
-
+/** Debug macros: */
 #define DEBUG_BOOT(F, ...)      debug_send(F "\r", ##__VA_ARGS__)
 #define DEBUG_INIT(F, ...)      debug_send_os(F "\r", ##__VA_ARGS__)
 #define DEBUG(F, ...)           debug_send_os(F "\r", ##__VA_ARGS__)
 #define DEBUG_RADIO(F, ...)     debug_send_os("[RADIO] " F "\r", ##__VA_ARGS__)
 #define DEBUG_DISPLAY(F, ...)   debug_send_os("[DISPLAY] " F "\r", ##__VA_ARGS__)
+#define DEBUG_SENSORS(F, ...)   debug_send_os("[SENSORS] " F "\r", ##__VA_ARGS__)
 
 /**********************************************************************************************************************
  * Exported types
@@ -57,10 +56,49 @@ extern "C" {
 /**********************************************************************************************************************
  * Prototypes of exported functions
  *********************************************************************************************************************/
+/**
+ * @brief   Initialize debug.
+ *
+ * @return  State of initialization.
+ * @retval  0   failed.
+ * @retval  1   success.
+ */
 bool debug_init(void);
+
+/**
+ * @brief   Send debug using std args (printf format).
+ *
+ * @note    Should be used when no OS running.
+ *
+ * @param   fmt     Pointer to debug message format.
+ */
 void debug_send(const char *fmt, ...);
+
+/**
+ * @brief   Send debug using std args (printf format).
+ *
+ * @note    Should be used when OS running.
+ *
+ * @param   fmt     Pointer to debug message format.
+ */
 void debug_send_os(const char *fmt, ...);
+
+/**
+ * @brief   Send data buffer as hex.
+ *
+ * @param   buffer  Pointer to data buffer.
+ * @param   size    Size of data buffer in byets.
+ */
 void debug_send_hex_os(uint8_t *buffer, uint16_t size);
+
+/**
+ * @brief   Send debug in simple blocking way.
+ *
+ * @note    Should be used in critical conditions like IRQ (hardfault etc.).
+ *
+ * @param   data    Pointer to data which needs to be sent as debug message.
+ * @param   size    Size of data to send in bytes.
+ */
 void debug_send_blocking(uint8_t *data, uint32_t size);
 
 #ifdef __cplusplus

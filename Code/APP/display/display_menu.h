@@ -63,7 +63,7 @@ typedef struct
 void display_menu_init(display_menu_id_t id, uint32_t period, display_menu_cb_t cb);
 
 void display_menu_cb_welcome(display_menu_id_t id);
-void display_menu_cb_clock(display_menu_id_t id);
+void display_menu_cb_main(display_menu_id_t id);
 void display_menu_cb_radio(display_menu_id_t id);
 void display_menu_cb_info(display_menu_id_t id);
 

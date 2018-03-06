@@ -69,6 +69,8 @@ static int8_t cli_get_prm_count(const uint8_t *cmd);
  *********************************************************************************************************************/
 void cli_init(void)
 {
+    // Place to do some CLI initialization if necessary.
+
     return;
 }
 

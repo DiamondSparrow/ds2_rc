@@ -27,9 +27,11 @@ extern "C" {
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
+#include "periph/adc.h"
 #include "periph/gpio.h"
 #include "periph/ssp.h"
 #include "periph/uart.h"
+#include "periph/wdt.h"
 
 /**********************************************************************************************************************
  * Exported definitions and macros
@@ -50,7 +52,23 @@ extern "C" {
 /**********************************************************************************************************************
  * Prototypes of exported functions
  *********************************************************************************************************************/
+/**
+ * @brief   Initialize BSP layer.
+ */
 void bsp_init(void);
+
+/**
+ * @brief   Get MCu reset cause.
+ *
+ * @return  Reset cause.
+ */
+uint32_t bsp_get_reset_cause(void);
+
+/**
+ * @brief   Get MCU core clock in Hz.
+ *
+ * @return  MCU core clock in Hz.
+ */
 uint32_t bsp_get_system_core_clock(void);
 
 #ifdef __cplusplus

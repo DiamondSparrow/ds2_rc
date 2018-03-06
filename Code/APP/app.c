@@ -28,12 +28,14 @@
 
 #include "app.h"
 #include "bsp.h"
+#include "buttons.h"
 #include "debug.h"
 #include "indication.h"
 
 #include "cli/cli_app.h"
 #include "display/display.h"
 #include "radio/radio.h"
+#include "sensors/sensors.h"
 
 /**********************************************************************************************************************
  * Private definitions and macros
@@ -59,6 +61,8 @@ const osThreadAttr_t app_thread_attr =
  *********************************************************************************************************************/
 /** Application thread ID. */
 osThreadId_t app_thread_id;
+/** RC mode. See @ref app_rc_mode_t. */
+volatile app_rc_mode_t app_rc_mode = APP_RC_MODE_STANDBY;
 
 /**********************************************************************************************************************
  * Exported variables
@@ -79,7 +83,7 @@ osThreadId_t app_thread_id;
 int main(void)
 {
     bsp_init();
-    indication_set_blocking(INDICATION_BOOT);
+    indication_set_blocking(INDICATION_ID_BOOT);
     DEBUG_BOOT("");
     DEBUG_BOOT("     .-'/ ,_  \'-.   ");
     DEBUG_BOOT("    /  (  ( >  )  \\ ");
@@ -88,8 +92,9 @@ int main(void)
     DEBUG_BOOT("          /_\\       ");
     DEBUG_BOOT(" # DS-2 Remote Controller #");
     DEBUG_BOOT(" * Booting.");
-    DEBUG_BOOT("%-15.15s %s %s", "Build:", __DATE__, __TIME__);
+    DEBUG_BOOT("%-15.15s 0x%X Hz.", "Reset:", bsp_get_reset_cause());
     DEBUG_BOOT("%-15.15s %ld Hz.", "Core Clock:", bsp_get_system_core_clock());
+    DEBUG_BOOT("%-15.15s %s %s", "Build:", __DATE__, __TIME__);
 
     // Setup and initialize peripherals.
     DEBUG_BOOT("%-15.15s ok.", "BSP:");
@@ -126,7 +131,7 @@ void app_thread(void *arguments)
 
     debug_init();
     DEBUG_INIT(" * Initializing.");
-    indication_set_blocking(INDICATION_INIT);
+    indication_set_blocking(INDICATION_ID_INIT);
     
     ret = indication_init();
     DEBUG_INIT("Indication .. %s.", ret ? "ok" : "err");
@@ -135,21 +140,61 @@ void app_thread(void *arguments)
     ret = display_init();
     DEBUG_INIT("Display ..... %s.", ret == false ? "err" : "ok");
     ret = radio_init();
-    DEBUG_INIT("Radio ..... %s.", ret == false ? "err" : "ok");
+    DEBUG_INIT("Radio ....... %s.", ret == false ? "err" : "ok");
+    ret = sensors_init();
+    DEBUG_INIT("Sensors ..... %s.", ret == false ? "err" : "ok");
+    ret = buttons_init();
+    DEBUG_INIT("Buttons ..... %s.", ret == false ? "err" : "ok");
 
     DEBUG(" * Running.");
-    indication_set(INDICATION_IDLE);
-    DEBUG("State: idle.");
+    app_rc_mode_set(APP_RC_MODE_STANDBY);
+    osDelay(500);
+    display_set_menu(DISPLAY_MENU_ID_MAIN);
 
     while(1)
     {
         osDelay(100);
+        wdt_feed();
     }
+}
+
+app_rc_mode_t app_rc_mode_get(void)
+{
+    return app_rc_mode;
+}
+
+void app_rc_mode_set(app_rc_mode_t mode)
+{
+    switch(mode)
+    {
+        case APP_RC_MODE_IDLE:
+            if(mode != app_rc_mode)
+            {
+                display_set_popup((uint8_t *)"Idle", 500);
+            }
+            indication_set(INDICATION_ID_IDLE);
+            DEBUG("State: idle.");
+            break;
+        default:
+        case APP_RC_MODE_STANDBY:
+            if(mode != app_rc_mode)
+            {
+                display_set_popup((uint8_t *)"Standby", 1000);
+            }
+            indication_set(INDICATION_ID_STANDBY);
+            DEBUG("State: standby.");
+            break;
+    }
+    __disable_irq();
+    app_rc_mode = mode;
+    __enable_irq();
+
+    return;
 }
 
 void app_error(void)
 {
-    indication_set_blocking(INDICATION_FAULT);
+    indication_set_blocking(INDICATION_ID_FAULT);
     debug_send_blocking((uint8_t *)"FATAL ERROR!\r", 13);
 
     while(1)

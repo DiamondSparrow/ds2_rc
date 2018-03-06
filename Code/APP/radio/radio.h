@@ -62,7 +62,20 @@ typedef struct
 /**********************************************************************************************************************
  * Prototypes of exported functions
  *********************************************************************************************************************/
+/**
+ * @brief   Initialize radio.
+ *
+ * @return  State of initialization.
+ * @retval  0   failed.
+ * @retval  1   success.
+ */
 bool radio_init(void);
+
+/**
+ * @brief   Radio control thread.
+ *
+ * @param   arguments   Pointer to thread arguments.
+ */
 void radio_thread(void *arguments);
 
 #ifdef __cplusplus

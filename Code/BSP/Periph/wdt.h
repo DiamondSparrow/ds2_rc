@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file        uart.h
- * @author      Diamond Sparrow
+ * @file        wdt.h
+ * @author      Deimantas Zvirblis
  * @version     1.0.0.0
- * @date        2016-04-10
- * @brief       This is C header file template.
+ * @date        2017-04-11
+ * @brief       Watchdog and Brown-Out Detect (BOD) C header file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -17,8 +17,8 @@
  **********************************************************************************************************************
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef WDT_H_
+#define WDT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,11 +27,13 @@ extern "C" {
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
-#include <stdint.h>
+#include <stdbool.h>
 
 /**********************************************************************************************************************
  * Exported definitions and macros
  *********************************************************************************************************************/
+#define WDT_TIMEOUT_S           4       //!< Watchdog timeout in seconds.
+#define WDT_WARNING_TICKS       1023    //!< Maximum 10 bits (1023).
 
 /**********************************************************************************************************************
  * Exported types
@@ -40,7 +42,7 @@ extern "C" {
 /**********************************************************************************************************************
  * Prototypes of exported constants
  *********************************************************************************************************************/
-    
+
 /**********************************************************************************************************************
  * Prototypes of exported variables
  *********************************************************************************************************************/
@@ -49,38 +51,44 @@ extern "C" {
  * Prototypes of exported functions
  *********************************************************************************************************************/
 /**
- * @brief   Initialize UART 0.
+ * @brief   Initialize wathcdog.
  */
-void uart_0_init(void);
+void wdt_init(void);
 
 /**
- * @brief   Send data through UART 0 in blocking way.
+ * @brief   Initialize Brawn Out Detect.
  *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
+ * @note    BOD is a part of watchdog, therefore watchdog should be initialized before.
+ *
+ * @warning When BOD is enabled, current consumption of device will increase.
  */
-void uart_0_send(uint8_t *data, uint32_t size);
+void wdt_bod_init(void);
 
 /**
- * @brief   Send data through UART 0 using ring buffer (via IRQ).
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
+ * @brief   Feed watchdog.
  */
-void uart_0_send_rb(uint8_t *data, uint32_t size);
+void wdt_feed(void);
 
 /**
- * @brief   Read data from UART 0 using ring buffer (visa IRQ).
+ * @brief   Watchdog software feed.
  *
- * @param   data    Pointer where to store received data.
- * @param   size    Size of data in bytes to receive.
- *
- * @return  Actual received data size.
+ * @return  Feed flag.
+ * @retval  0   no feed.
+ * @retval  1   feed.
  */
-uint32_t uart_0_read_rb(uint8_t *data, uint32_t size);
+bool wdt_feed_soft(void);
+
+/**
+ * @brief   Get watchdog initialization flag.
+ *
+ * @return  Flag.
+ * @retval  0 - watchdog not running.
+ * @retval  1 - watchdog running.
+ */
+bool wdt_get_init_flag(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* WDT_H_ */

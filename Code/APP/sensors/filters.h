@@ -1,9 +1,9 @@
 /**
  **********************************************************************************************************************
- * @file        uart.h
+ * @file        filters.h
  * @author      Diamond Sparrow
  * @version     1.0.0.0
- * @date        2016-04-10
+ * @date        2016-10-04
  * @brief       This is C header file template.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
@@ -17,8 +17,8 @@
  **********************************************************************************************************************
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef FILTERS_H_
+#define FILTERS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,6 @@ extern "C" {
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
-#include <stdint.h>
 
 /**********************************************************************************************************************
  * Exported definitions and macros
@@ -36,11 +35,42 @@ extern "C" {
 /**********************************************************************************************************************
  * Exported types
  *********************************************************************************************************************/
+/**
+ * @brief   Kalman filter data.
+ */
+typedef struct
+{
+    double process_noise_cov;       //!< Process noise covariance.
+    double measurement_noise_cov;   //!< Measurement noise covariance.
+    double value;                   //!< Current input value.
+    double estimation_error;        //!< Estimation error covariance.
+    double gain;                    //!< Kalman gain.
+} filters_kalman_t;
+
+/**
+ * @brief   Low Pass filter data.
+ */
+typedef struct
+{
+    double input;   //!< Input value.
+    double output;  //!< Output value.
+    double cut_off; //!< Filter cut off.
+} filters_low_pass_t;
+
+/**
+ * @brief   High Pass filter data.
+ */
+typedef struct
+{
+    double input;   //!< Input value.
+    double output;  //!< Output value.
+    double cut_off; //!< Filter cut off.
+} filters_high_pass_t;
 
 /**********************************************************************************************************************
- * Prototypes of exported constants
+ * Exported constants
  *********************************************************************************************************************/
-    
+
 /**********************************************************************************************************************
  * Prototypes of exported variables
  *********************************************************************************************************************/
@@ -49,38 +79,52 @@ extern "C" {
  * Prototypes of exported functions
  *********************************************************************************************************************/
 /**
- * @brief   Initialize UART 0.
+ * @brief   Initialize kalman filter.
+ *
+ * @param   proc_noise_cov  Process noise covariance.
+ * @param   meas_noise_cov  Measurement noise covariance.
+ * @param   est_error       Estimation error covariance.
+ * @param   value           Initial value.
+ *
+ * @return  Initialized kalman data structure. See @ref filters_kalman_t.
  */
-void uart_0_init(void);
+filters_kalman_t filters_kalman_init(double proc_noise_cov, double meas_noise_cov, double est_error, double value);
 
 /**
- * @brief   Send data through UART 0 in blocking way.
+ * @brief   Update kalman filter.
+ * @note    Before using you must initialize kalman filter. See @ref filter_kalman_init.
  *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
+ * @param   data    Kalman filter data. See @ref filters_kalman_t.
+ * @param   input   Input value for kalman filter.
+ *
+ * @return  Kalman filter output value.
  */
-void uart_0_send(uint8_t *data, uint32_t size);
+double filters_kalman_update(filters_kalman_t *data, double input);
 
 /**
- * @brief   Send data through UART 0 using ring buffer (via IRQ).
+ * @brief   Low pass filter.
  *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
+ * @param   data    Low pass filter data. See @ref filters_low_pass_t.
+ * @param   input   Input data for low pass filter.
+ * @param   cut_off Cut off value.
+ *
+ * @return  Output value of low pass filter.
  */
-void uart_0_send_rb(uint8_t *data, uint32_t size);
+double filters_low_pass(filters_low_pass_t *data, double input, double cut_off);
 
 /**
- * @brief   Read data from UART 0 using ring buffer (visa IRQ).
+ * @brief   High pass filter.
  *
- * @param   data    Pointer where to store received data.
- * @param   size    Size of data in bytes to receive.
+ * @param   data    High pass filter data. See @ref filters_high_pass_t.
+ * @param   input   Input data for low pass filter.
+ * @param   cut_off Cut off value.
  *
- * @return  Actual received data size.
+ * @return  Output value of high pass filter.
  */
-uint32_t uart_0_read_rb(uint8_t *data, uint32_t size);
+double filters_high_pass(filters_high_pass_t *data, double input, double cut_off);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* FILTERS_H_ */

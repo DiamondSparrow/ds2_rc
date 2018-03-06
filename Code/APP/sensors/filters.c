@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file        uart.h
- * @author      Diamond Sparrow
- * @version     1.0.0.0
- * @date        2016-04-10
- * @brief       This is C header file template.
+ * @file         filters.c
+ * @author       Diamond Sparrow
+ * @version      1.0.0.0
+ * @date         2016-10-04
+ * @brief        This is C source file template.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -17,70 +17,83 @@
  **********************************************************************************************************************
  */
 
-#ifndef UART_H_
-#define UART_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
 #include <stdint.h>
 
+#include "filters.h"
+
 /**********************************************************************************************************************
- * Exported definitions and macros
+ * Private definitions and macros
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
- * Exported types
+ * Private typedef
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
- * Prototypes of exported constants
- *********************************************************************************************************************/
-    
-/**********************************************************************************************************************
- * Prototypes of exported variables
+ * Private constants
  *********************************************************************************************************************/
 
 /**********************************************************************************************************************
- * Prototypes of exported functions
+ * Private variables
  *********************************************************************************************************************/
-/**
- * @brief   Initialize UART 0.
- */
-void uart_0_init(void);
 
-/**
- * @brief   Send data through UART 0 in blocking way.
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send(uint8_t *data, uint32_t size);
+/**********************************************************************************************************************
+ * Exported variables
+ *********************************************************************************************************************/
 
-/**
- * @brief   Send data through UART 0 using ring buffer (via IRQ).
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send_rb(uint8_t *data, uint32_t size);
+/**********************************************************************************************************************
+ * Prototypes of local functions
+ *********************************************************************************************************************/
 
-/**
- * @brief   Read data from UART 0 using ring buffer (visa IRQ).
- *
- * @param   data    Pointer where to store received data.
- * @param   size    Size of data in bytes to receive.
- *
- * @return  Actual received data size.
- */
-uint32_t uart_0_read_rb(uint8_t *data, uint32_t size);
+/**********************************************************************************************************************
+ * Exported functions
+ *********************************************************************************************************************/
 
-#ifdef __cplusplus
+/**********************************************************************************************************************
+ * Private functions
+ *********************************************************************************************************************/
+filters_kalman_t filters_kalman_init(double proc_noise_cov, double meas_noise_cov, double est_error, double value)
+{
+    filters_kalman_t result = {0};
+
+    result.process_noise_cov        = proc_noise_cov;
+    result.measurement_noise_cov    = meas_noise_cov;
+    result.estimation_error         = est_error;
+    result.value                    = value;
+
+    return result;
 }
-#endif
 
-#endif /* UART_H_ */
+double filters_kalman_update(filters_kalman_t *data, double input)
+{
+    // Prediction update. Omit x = x.
+    data->estimation_error = data->estimation_error + data->process_noise_cov;
+
+    // Measurement update
+    data->gain = data->estimation_error / (data->estimation_error + data->measurement_noise_cov);
+    data->value = data->value + data->gain * (input - data->value);
+    data->estimation_error = (1 - data->gain) * data->estimation_error;
+
+    return data->value;
+}
+
+double filters_low_pass(filters_low_pass_t *data, double input, double cut_off)
+{
+    data->input = input;
+    data->cut_off = cut_off;
+    data->output = data->output + (data->cut_off * (data->input - data->output));
+
+    return data->output;
+}
+
+double filters_high_pass(filters_high_pass_t *data, double input, double cut_off)
+{
+    data->input = input;
+    data->cut_off = cut_off;
+    data->output = data->input - (data->output + data->cut_off * (data->input - data->output));
+
+    return data->output;
+}

@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file        uart.h
+ * @file        sensors.h
  * @author      Diamond Sparrow
  * @version     1.0.0.0
- * @date        2016-04-10
- * @brief       This is C header file template.
+ * @date        2016-09-01
+ * @brief       Sensors C header file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -17,8 +17,8 @@
  **********************************************************************************************************************
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef SENSORS_H_
+#define SENSORS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,7 @@ extern "C" {
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
-#include <stdint.h>
+#include <stdbool.h>
 
 /**********************************************************************************************************************
  * Exported definitions and macros
@@ -36,51 +36,34 @@ extern "C" {
 /**********************************************************************************************************************
  * Exported types
  *********************************************************************************************************************/
+typedef struct
+{
+    struct
+    {
+        bool state;
+        int32_t magnitude;
+        int32_t direction;
+        bool sw;
+    } joystick_1;
+} sensors_data_t;
 
 /**********************************************************************************************************************
- * Prototypes of exported constants
+ * Exported constants
  *********************************************************************************************************************/
-    
+
 /**********************************************************************************************************************
  * Prototypes of exported variables
  *********************************************************************************************************************/
+extern volatile sensors_data_t sensors_data;
 
 /**********************************************************************************************************************
  * Prototypes of exported functions
  *********************************************************************************************************************/
-/**
- * @brief   Initialize UART 0.
- */
-void uart_0_init(void);
-
-/**
- * @brief   Send data through UART 0 in blocking way.
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send(uint8_t *data, uint32_t size);
-
-/**
- * @brief   Send data through UART 0 using ring buffer (via IRQ).
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send_rb(uint8_t *data, uint32_t size);
-
-/**
- * @brief   Read data from UART 0 using ring buffer (visa IRQ).
- *
- * @param   data    Pointer where to store received data.
- * @param   size    Size of data in bytes to receive.
- *
- * @return  Actual received data size.
- */
-uint32_t uart_0_read_rb(uint8_t *data, uint32_t size);
+bool sensors_init(void);
+void sensors_thread(void *arguments);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* SENSORS_H_ */

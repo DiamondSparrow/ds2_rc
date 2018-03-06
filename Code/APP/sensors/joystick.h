@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file        uart.h
+ * @file        joystick.h
  * @author      Diamond Sparrow
  * @version     1.0.0.0
- * @date        2016-04-10
- * @brief       This is C header file template.
+ * @date        2016-10-16
+ * @brief       Joystick C header file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -17,8 +17,8 @@
  **********************************************************************************************************************
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef JOYSTICK_H_
+#define JOYSTICK_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,6 @@ extern "C" {
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
-#include <stdint.h>
 
 /**********************************************************************************************************************
  * Exported definitions and macros
@@ -36,11 +35,17 @@ extern "C" {
 /**********************************************************************************************************************
  * Exported types
  *********************************************************************************************************************/
+typedef enum
+{
+    JOYSTICK_ID_LEFT,
+    JOYSTICK_ID_RIGHT,
+    JOYSTICK_ID_LAST,
+} joystick_id_t;
 
 /**********************************************************************************************************************
- * Prototypes of exported constants
+ * Exported constants
  *********************************************************************************************************************/
-    
+
 /**********************************************************************************************************************
  * Prototypes of exported variables
  *********************************************************************************************************************/
@@ -48,39 +53,16 @@ extern "C" {
 /**********************************************************************************************************************
  * Prototypes of exported functions
  *********************************************************************************************************************/
-/**
- * @brief   Initialize UART 0.
- */
-void uart_0_init(void);
+bool joystick_init(void);
+void joystick_calibrate(joystick_id_t id);
+int16_t joystick_get_x(joystick_id_t id);
+int16_t joystick_get_y(joystick_id_t id);
+void joystick_get_vector(joystick_id_t id, int32_t *magnitude, int32_t *direction);
+bool joystick_get_sw(joystick_id_t id);
 
-/**
- * @brief   Send data through UART 0 in blocking way.
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send(uint8_t *data, uint32_t size);
-
-/**
- * @brief   Send data through UART 0 using ring buffer (via IRQ).
- *
- * @param   data    Pointer to data to send.
- * @param   size    Size of data to send in bytes
- */
-void uart_0_send_rb(uint8_t *data, uint32_t size);
-
-/**
- * @brief   Read data from UART 0 using ring buffer (visa IRQ).
- *
- * @param   data    Pointer where to store received data.
- * @param   size    Size of data in bytes to receive.
- *
- * @return  Actual received data size.
- */
-uint32_t uart_0_read_rb(uint8_t *data, uint32_t size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* JOYSTICK_H_ */

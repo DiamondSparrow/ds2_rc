@@ -15,6 +15,17 @@
  *              CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF\n
  *              THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************
+ * Radio module pinout:
+ * +------+------+
+ * | VCC  | GND  |
+ * +------+------+
+ * | CS   | CE   |
+ * +------+------+
+ * | MOSI | SCK  |
+ * +------+------+
+ * | IRQ  | MISO |
+ * +------+------+
+ **********************************************************************************************************************
  */
 
 #ifndef NRF24L01_H_
@@ -38,6 +49,8 @@ extern "C" {
 #define NRF24L01_IRQ_MAX_RT     0x10    //!< Max retransmissions reached, last transmission failed.
 
 #define NRF24L01_ADDRESS_SIZE   5       //!< Address size in bytes.
+#define NRF24L01_MAX_PAYLOAD    32      //!< Maximum payload in bytes.
+#define NRF24L01_MAX_RTR        15      //!< Maximum retransmissions count.
 
 /**********************************************************************************************************************
  * Exported types
@@ -73,6 +86,17 @@ typedef enum
     NRF24L01_TX_POWER_0DBM,     //!< Output power set to 0 dBm.
 } nrf24l01_tx_power_t;
 
+/**
+ * @brief   NRF24L01+ configuration data structure.
+ */
+typedef struct
+{
+    uint8_t payload_size;           //!< Payload size in bytes.
+    uint8_t channel;                //!< Selected channel.
+    nrf24l01_tx_power_t tx_power;   //!< Output power, see @ref nrf24l01_tx_power_t.
+    nrf24l01_data_rate_t data_rate; //!< Data rate, see @ref nrf24l01_data_rate_t.
+} nrf24l01_cfg_t;
+
 /**********************************************************************************************************************
  * Prototypes of exported constants
  *********************************************************************************************************************/
@@ -98,7 +122,7 @@ typedef enum
  * @retval  0   failed.
  * @retval  1   success.
  */
-uint8_t nrf24l01_init(uint8_t channel, uint8_t payload_size);
+uint8_t nrf24l01_init(const nrf24l01_cfg_t *config);
 
 /**
  * @brief   Sets own address. This is used for settings own id when communication with other modules.

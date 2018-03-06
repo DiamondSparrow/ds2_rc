@@ -1,10 +1,10 @@
 /**
  **********************************************************************************************************************
- * @file        debug.c
- * @author      Diamond Sparrow
+ * @file        wdt.c
+ * @author      Deimantas Zvirblis
  * @version     1.0.0.0
- * @date        2016-04-10
- * @brief       Debug C source file.
+ * @date        2017-04-11
+ * @brief       Watchdog and Brown-Out Detect (BOD) C source file.
  **********************************************************************************************************************
  * @warning     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR \n
  *              IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\n
@@ -20,22 +20,16 @@
 /**********************************************************************************************************************
  * Includes
  *********************************************************************************************************************/
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdarg.h>
 
-#include "bsp.h"
-#include "cmsis_os2.h"
+#include "periph/wdt.h"
+
 #include "chip.h"
-
-#include "debug.h"
 
 /**********************************************************************************************************************
  * Private definitions and macros
  *********************************************************************************************************************/
-#define DEBUG_BUFFER_SIZE   256     //!< Debug buffer size in bytes.
-#define DEBUG_LOCK_TIMEOUT  1000    //!< Debug lock semaphore timeout in milliseconds.
 
 /**********************************************************************************************************************
  * Private typedef
@@ -48,10 +42,10 @@
 /**********************************************************************************************************************
  * Private variables
  *********************************************************************************************************************/
-/** @brief   Debug lock semaphore id. */
-osSemaphoreId_t debug_lock_id;
-/** Debug buffer, See @ref DEBUG_BUFFER_SIZE. */
-__IO uint8_t debug_buffer[DEBUG_BUFFER_SIZE] = {0};
+/** Watchdog feed flag. If true watchdog feed ok, else - no feed. */
+__IO bool wdt_feed_flag = false;
+/** Watchdog initialization flag. */
+static bool wdt_init_flag = false;
 
 /**********************************************************************************************************************
  * Exported variables
@@ -64,84 +58,119 @@ __IO uint8_t debug_buffer[DEBUG_BUFFER_SIZE] = {0};
 /**********************************************************************************************************************
  * Exported functions
  *********************************************************************************************************************/
-bool debug_init(void)
+void wdt_init(void)
 {
-    if((debug_lock_id = osSemaphoreNew(1, 1, 0)) == NULL)
-    {
-        return false;
-    }
+    uint32_t freq = 0;
 
-    return true;
-}
+    // WDT oscillator freq = 0.6MHz divided by 64 = 9.375khz
+    Chip_Clock_SetWDTOSC(WDTLFO_OSC_0_60, 64);
 
-void debug_send(const char *fmt, ...)
-{
-    uint16_t i = 0;
-    va_list args;
+    // Enable the power to the WDT
+    Chip_SYSCTL_PowerUp(SYSCTL_SLPWAKE_WDTOSC_PD);
 
-    va_start(args, fmt);
-    i = vsnprintf((char*)debug_buffer, DEBUG_BUFFER_SIZE - 1, fmt, args);
-    debug_buffer[i] = 0x00;     // Make sure its zero terminated
-    uart_0_send((uint8_t *)debug_buffer, i);
-    va_end(args);
+    // The WDT divides the input frequency into it by 4
+    freq = Chip_Clock_GetWDTOSCRate() / 4;
+
+    // Initialize WWDT (also enables WWDT clock)
+    Chip_WWDT_Init(LPC_WWDT);
+
+    // Use WDTOSC as the WDT clock
+    Chip_WWDT_SelClockSource(LPC_WWDT, WWDT_CLKSRC_WATCHDOG_WDOSC);
+
+    /*
+     * Set watchdog feed time constant to approximately 2s
+     * Set watchdog warning time to 512 ticks after feed time constant
+     * Set watchdog window time to 3s
+     */
+    Chip_WWDT_SetTimeOut(LPC_WWDT, freq * WDT_TIMEOUT_S);
+    Chip_WWDT_SetWarning(LPC_WWDT, WDT_WARNING_TICKS > 1023 ? 1023 : WDT_WARNING_TICKS);
+
+    // Configure WWDT to reset on timeout
+    Chip_WWDT_SetOption(LPC_WWDT, WWDT_WDMOD_WDRESET);
+
+    // Clear watchdog warning and timeout interrupts
+    Chip_WWDT_ClearStatusFlag(LPC_WWDT, WWDT_WDMOD_WDTOF | WWDT_WDMOD_WDINT);
+
+    // Enable RTC as a peripheral wake up event
+    Chip_SYSCTL_EnablePeriphWakeup(SYSCTL_WAKEUP_BOD_WDT_INT);
+
+    // Clear and enable watchdog interrupt
+    NVIC_ClearPendingIRQ(BOD_WDT_IRQn);
+    NVIC_EnableIRQ(BOD_WDT_IRQn);
+
+    /* Start watchdog */
+    Chip_WWDT_Start(LPC_WWDT);
+    wdt_init_flag = true;
 
     return;
 }
 
-void debug_send_os(const char *fmt, ...)
+void wdt_bod_init(void)
 {
-    uint16_t i = 0;
-    va_list args;
-
-    if (osSemaphoreAcquire(debug_lock_id, DEBUG_LOCK_TIMEOUT) == osOK)
-    {
-        va_start(args, fmt);
-        i = vsnprintf((char*)debug_buffer, DEBUG_BUFFER_SIZE - 1, fmt, args);
-        debug_buffer[i] = 0x00;     // Make sure its zero terminated
-        uart_0_send((uint8_t *)debug_buffer, i);
-        va_end(args);
-        osSemaphoreRelease(debug_lock_id);
-    }
+    /* Set brown-out interrupt at 2.8v and reset at 1.46v  */
+    Chip_SYSCTL_SetBODLevels(SYSCTL_BODRSTLVL_LEVEL3, SYSCTL_BODINTVAL_2_LEVEL2);
+    Chip_SYSCTL_EnableBODReset();
 
     return;
 }
 
-void debug_send_hex_os(uint8_t *buffer, uint16_t size)
+void wdt_feed(void)
 {
-    uint16_t i = 0;
-    uint16_t c = 0;
-
-    if(osSemaphoreAcquire(debug_lock_id, DEBUG_LOCK_TIMEOUT) == osOK)
-    {
-        for(i = 0; i < size; i++)
-        {
-            if((c + 8) >= DEBUG_BUFFER_SIZE)
-            {
-                break;
-            }
-            if(i > 0)
-            {
-                c += snprintf((char*)&debug_buffer[c], (DEBUG_BUFFER_SIZE - c), ",%02X", buffer[i]);
-            }
-            else
-            {
-                c += snprintf((char*)&debug_buffer[c], (DEBUG_BUFFER_SIZE - c), "[%02X", buffer[i]);
-            }
-        }
-        c += snprintf((char*)&debug_buffer[c], (DEBUG_BUFFER_SIZE - c), "]\r\n");
-        uart_0_send((uint8_t *)debug_buffer, c);
-        osSemaphoreRelease(debug_lock_id);
-    }
-}
-
-void debug_send_blocking(uint8_t *data, uint32_t size)
-{
-    uart_0_send(data, size);
+    __disable_irq();
+    Chip_WWDT_Feed(LPC_WWDT);
+    __enable_irq();
 
     return;
+}
+
+bool wdt_feed_soft(void)
+{
+    __disable_irq();
+    wdt_feed_flag = true;
+    __enable_irq();
+
+    return wdt_feed_flag;
+}
+
+bool wdt_get_init_flag(void)
+{
+    return wdt_init_flag;
 }
 
 /**********************************************************************************************************************
  * Private functions
  *********************************************************************************************************************/
+/**
+ * @brief   Brown Out Detection and Watchdog IRQ handler.
+ */
+void BOD_WDT_IRQHandler(void)
+{
+    uint32_t status = Chip_WWDT_GetStatus(LPC_WWDT);
 
+    // Handle warning interrupt
+    if(status & WWDT_WDMOD_WDINT)
+    {
+        if(wdt_feed_flag == true)
+        {
+            Chip_WWDT_Feed(LPC_WWDT);
+            wdt_feed_flag = false;
+        }
+        /* A watchdog feed didn't occur prior to warning timeout */
+        Chip_WWDT_ClearStatusFlag(LPC_WWDT, WWDT_WDMOD_WDINT);
+    }
+    /*
+     * The chip will reset before this happens, but if the WDT doesn't
+     * have WWDT_WDMOD_WDRESET enabled, this will hit once
+     */
+    if(status & WWDT_WDMOD_WDTOF)
+    {
+        // A watchdog feed didn't occur prior to window timeout
+        Chip_WWDT_UnsetOption(LPC_WWDT, WWDT_WDMOD_WDEN);       // Stop WDT
+        Chip_WWDT_ClearStatusFlag(LPC_WWDT, WWDT_WDMOD_WDTOF);  // Clear flags
+        Chip_WWDT_Start(LPC_WWDT);                              // Needs restart
+    }
+
+    __DSB();
+
+    return;
+}

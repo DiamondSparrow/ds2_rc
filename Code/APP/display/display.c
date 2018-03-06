@@ -38,7 +38,7 @@
 /**********************************************************************************************************************
  * Private definitions and macros
  *********************************************************************************************************************/
-#define DISPLAY_TIMEOUT         20000   //!< Display ON timeout in milliseconds.
+#define DISPLAY_TIMEOUT         10000   //!< Display ON timeout in milliseconds.
 #define DISPLAY_DIM_ON_DELAY    1       //!< Dim ON step delay in milliseconds.
 #define DISPLAY_DIM_OFF_DELAY   1       //!< Dim OFF step delay in milliseconds.
 #define DISPLAY_FIRST_MENU      1       //!< If 1 after wakeup displays first menu, else - last viewed.
@@ -152,6 +152,7 @@ static void display_delay(display_menu_id_t id);
 bool display_init(void)
 {
     display_menu_init(DISPLAY_MENU_ID_WELCOME, 0, display_menu_cb_welcome);
+    display_menu_init(DISPLAY_MENU_ID_MAIN, 100, display_menu_cb_main);
     display_menu_init(DISPLAY_MENU_ID_RADIO, 100, display_menu_cb_radio);
     display_menu_init(DISPLAY_MENU_ID_INFO, 1000, display_menu_cb_info);
 
@@ -187,6 +188,17 @@ void display_turn_on(void)
     __disable_irq();
     display_power_cntrl = true;
     __enable_irq();
+
+    return;
+}
+
+
+void display_keep_on(void)
+{
+    if(display_power_cntrl == true)
+    {
+        osTimerStart(display_timer_id, DISPLAY_TIMEOUT);
+    }
 
     return;
 }

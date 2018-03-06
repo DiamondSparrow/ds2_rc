@@ -44,15 +44,15 @@ extern "C" {
  */
 typedef enum
 {
-    INDICATION_OFF,    //!< Indication not available - OFF.
-    INDICATION_ON,     //!< Indication is always ON.
-    INDICATION_INIT,   //!< Indication for initialization state.
-    INDICATION_BOOT,   //!< Indication for boot mode.
-    INDICATION_STANDBY,//!< Indication for standby mode.
-    INDICATION_IDLE,   //!< Indication for idle mode.
-    INDICATION_FAULT,  //!< Indication for fault mode.
-} indication_t;
-
+    INDICATION_ID_OFF,    //!< Indication not available - OFF.
+    INDICATION_ID_ON,     //!< Indication is always ON.
+    INDICATION_ID_INIT,   //!< Indication for initialization state.
+    INDICATION_ID_BOOT,   //!< Indication for boot mode.
+    INDICATION_ID_STANDBY,//!< Indication for standby mode.
+    INDICATION_ID_IDLE,   //!< Indication for idle mode.
+    INDICATION_ID_FAULT,  //!< Indication for fault mode.
+    INDICATSION_ID_LAST,  //!< last should stay last!
+} indication_id_t;
 
 /**********************************************************************************************************************
  * Prototypes of exported constants
@@ -79,14 +79,14 @@ bool indication_init(void);
  *
  * @param   indication  Indication to set. See @ref indication_t.
  */
-void indication_set(indication_t indication);
+void indication_set(indication_id_t indication);
 
 /**
  * @brief   Set indication immediately.
  *
  * @param   indication  Indication to set. See @ref indication_t.
  */
-void indication_set_blocking(indication_t indication);
+void indication_set_blocking(indication_id_t indication);
 
 /**
  * @brief   Indication timer handler.
@@ -94,6 +94,42 @@ void indication_set_blocking(indication_t indication);
  * @param   arg Pointer to timer arguments.
  */
 void indication_handle(void *arguments);
+
+
+/**
+ * @brief   Indication 'INDICATION_OFF' control.
+ */
+void indication_cb_off(void);
+
+/**
+ * @brief   Indication 'INDICATION_ON' control.
+ */
+static void indication_cb_on(void);
+
+/**
+ * @brief   Indication 'INDICATION_BOOT' control.
+ */
+static void indication_cb_boot(void);
+
+/**
+ * @brief   Indication 'INDICATION_INIT' control.
+ */
+static void indication_cb_init(void);
+
+/**
+ * @brief   Indication 'INDICATION_STANDBY' control.
+ */
+static void indication_cb_standby(void);
+
+/**
+ * @brief   Indication 'INDICATION_IDLE' control.
+ */
+static void indication_cb_idle(void);
+
+/**
+ * @brief   Indication 'INDICATION_FAULT' control.
+ */
+static void indication_cb_fault(void);
 
 #ifdef __cplusplus
 }

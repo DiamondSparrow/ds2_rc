@@ -36,22 +36,40 @@
 /**********************************************************************************************************************
  * Private typedef
  *********************************************************************************************************************/
+/**
+ * @brief   Buttons callback function prototype
+ *
+ * @note    This callback function will be called when button state changes.
+ */
+typedef void (*indication_callback_t)(void);
 
 /**********************************************************************************************************************
  * Private constants
  *********************************************************************************************************************/
-
-/**********************************************************************************************************************
- * Private variables
- *********************************************************************************************************************/
-osTimerId_t indication_timer_id;
 /** Indication timer attributes. */
 const osTimerAttr_t indication_timer_attr =
 {
     .name = "INDICATION",
 };
 
-indication_t indication_flag = INDICATION_OFF;
+/**********************************************************************************************************************
+ * Private variables
+ *********************************************************************************************************************/
+/** Indication timer id. */
+osTimerId_t indication_timer_id;
+/** Indication flag. See @ref indication_id_t. */
+indication_id_t indication_flag = INDICATION_ID_OFF;
+/** Indications callback functions list. */
+const indication_callback_t indications_cb_list[INDICATSION_ID_LAST] =
+{
+    indication_cb_off,
+    indication_cb_on,
+    indication_cb_boot,
+    indication_cb_init,
+    indication_cb_standby,
+    indication_cb_idle,
+    indication_cb_fault,
+};
 
 /**********************************************************************************************************************
  * Exported variables
@@ -60,40 +78,6 @@ indication_t indication_flag = INDICATION_OFF;
 /**********************************************************************************************************************
  * Prototypes of local functions
  *********************************************************************************************************************/
-/**
- * @brief   Indication 'INDICATION_OFF' control.
- */
-static void indication_cntrl_off(void);
-
-/**
- * @brief   Indication 'INDICATION_ON' control.
- */
-static void indication_cntrl_on(void);
-
-/**
- * @brief   Indication 'INDICATION_BOOT' control.
- */
-static void indication_cntrl_boot(void);
-
-/**
- * @brief   Indication 'INDICATION_INIT' control.
- */
-static void indication_cntrl_init(void);
-
-/**
- * @brief   Indication 'INDICATION_STANDBY' control.
- */
-static void indication_cntrl_standby(void);
-
-/**
- * @brief   Indication 'INDICATION_IDLE' control.
- */
-static void indication_cntrl_idle(void);
-
-/**
- * @brief   Indication 'INDICATION_FAULT' control.
- */
-static void indication_cntrl_fault(void);
 
 /**********************************************************************************************************************
  * Exported functions
@@ -113,7 +97,7 @@ bool indication_init(void)
     return true;
 }
 
-void indication_set(indication_t indication)
+void indication_set(indication_id_t indication)
 {
     __disable_irq();
     indication_flag = indication;
@@ -122,7 +106,7 @@ void indication_set(indication_t indication)
     return;
 }
 
-void indication_set_blocking(indication_t indication)
+void indication_set_blocking(indication_id_t indication)
 {
     __disable_irq();
     indication_flag = indication;
@@ -134,69 +118,43 @@ void indication_set_blocking(indication_t indication)
 
 void indication_handle(void *arguments)
 {
-    indication_t indication = indication_flag;
+    indication_id_t indication = indication_flag;
 
-    switch(indication)
-    {
-        default:
-        case INDICATION_OFF:
-            indication_cntrl_off();
-            break;
-        case INDICATION_ON:
-            indication_cntrl_on();
-            break;
-        case INDICATION_BOOT:
-            indication_cntrl_boot();
-            break;
-        case INDICATION_INIT:
-            indication_cntrl_init();
-            break;
-        case INDICATION_STANDBY:
-            indication_cntrl_standby();
-            break;;
-        case INDICATION_IDLE:
-            indication_cntrl_idle();
-            break;
-        case INDICATION_FAULT:
-            indication_cntrl_fault();
-            break;
-    }
+    indications_cb_list[indication]();
 
     return;
 }
 
-/**********************************************************************************************************************
- * Private functions
- *********************************************************************************************************************/
-static void indication_cntrl_off(void)
+
+void indication_cb_off(void)
 {
     gpio_output_low(GPIO_ID_LED_STATUS);
 
     return;
 }
 
-static void indication_cntrl_on(void)
+void indication_cb_on(void)
 {
     gpio_output_high(GPIO_ID_LED_STATUS);
 
     return;
 }
 
-static void indication_cntrl_boot(void)
+void indication_cb_boot(void)
 {
     gpio_output_high(GPIO_ID_LED_STATUS);
 
     return;
 }
 
-static void indication_cntrl_init(void)
+void indication_cb_init(void)
 {
     gpio_output_high(GPIO_ID_LED_STATUS);
 
     return;
 }
 
-static void indication_cntrl_standby(void)
+void indication_cb_standby(void)
 {
     gpio_output_high(GPIO_ID_LED_STATUS);
     osDelay(50);
@@ -205,7 +163,7 @@ static void indication_cntrl_standby(void)
     return;
 }
 
-static void indication_cntrl_idle(void)
+void indication_cb_idle(void)
 {
     gpio_output_high(GPIO_ID_LED_STATUS);
     osDelay(50);
@@ -218,7 +176,7 @@ static void indication_cntrl_idle(void)
     return;
 }
 
-static void indication_cntrl_fault(void)
+void indication_cb_fault(void)
 {
     gpio_output_high(GPIO_ID_LED_STATUS);
     osDelay(500);
@@ -226,3 +184,7 @@ static void indication_cntrl_fault(void)
 
     return;
 }
+
+/**********************************************************************************************************************
+ * Private functions
+ *********************************************************************************************************************/

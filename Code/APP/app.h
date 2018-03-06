@@ -35,11 +35,19 @@ extern "C" {
 /**********************************************************************************************************************
  * Exported types
  *********************************************************************************************************************/
+/**
+ * @brief   Remote control modes.
+ */
+typedef enum
+{
+    APP_RC_MODE_STANDBY = 0,    //!< Standby mode: no control allowed.
+    APP_RC_MODE_IDLE,           //!< Idle mode: control is allowed.
+} app_rc_mode_t;
 
 /**********************************************************************************************************************
  * Prototypes of exported constants
  *********************************************************************************************************************/
-    
+
 /**********************************************************************************************************************
  * Prototypes of exported variables
  *********************************************************************************************************************/
@@ -53,6 +61,20 @@ extern "C" {
  * @param   arguments   Pointer to thread arguments.
  */
 void app_thread(void *arguments);
+
+/**
+ * @brief    Get RC mode.
+ *
+ * @return  RC mode. See @ref app_rc_mode_t.
+ */
+app_rc_mode_t app_rc_mode_get(void);
+
+/**
+ * @brief   Set new RC mode.
+ *
+ * @param   mode    New mode. See @ref app_rc_mode_t.
+ */
+void app_rc_mode_set(app_rc_mode_t mode);
 
 /**
  * @brief   Application error handler.

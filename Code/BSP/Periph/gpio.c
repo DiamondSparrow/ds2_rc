@@ -36,10 +36,11 @@
  *********************************************************************************************************************/
 typedef struct
 {
-    uint8_t port;   //!< GPIO port number.
-    uint8_t pin;    //!< GPIO Pin number.
-    bool dir;       //!< Pin directions: 0 - input, 1 - output.
-    bool state;     //!< Pin state: 0 - low, 1 - high.
+    uint8_t port;       /**< GPIO port number. */
+    uint8_t pin;        /**< GPIO Pin number. */
+    bool dir;           /**< Pin directions: 0 - input, 1 - output. */
+    bool state;         /**< Pin state: 0 - low, 1 - high. */
+    uint32_t modefunc;  /**< GPIO pin mode and/or function. */
 } gpio_item_t;
 
 /**********************************************************************************************************************
@@ -47,12 +48,16 @@ typedef struct
  *********************************************************************************************************************/
 const gpio_item_t gpio_list[GPIO_ID_LAST] =
 {
-    {.port = 2, .pin = 19, .dir = true, .state = false,},   // GPIO_ID_LED_STATUS
-    {.port = 0, .pin = 7,  .dir = true, .state = true,},    // GPIO_ID_DISPLAY_SELECT
-    {.port = 0, .pin = 8,  .dir = true, .state = true,},    // GPIO_ID_DISPLAY_RESTART
-    {.port = 1, .pin = 28, .dir = true, .state = true,},    // GPIO_ID_DISPLAY_DC
-    {.port = 2, .pin = 6,  .dir = true, .state = false,},   // GPIO_ID_NRF24L01_CE
-    {.port = 1, .pin = 23, .dir = true, .state = true,},    // GPIO_ID_NRF24L01_CSN
+    {.port = 2, .pin = 19, .dir = true,   .state = false,  .modefunc = IOCON_FUNC0 | IOCON_MODE_INACT,},  // GPIO_ID_LED_STATUS
+    {.port = 0, .pin = 7,  .dir = true,   .state = true,   .modefunc = IOCON_FUNC0 | IOCON_MODE_INACT,},  // GPIO_ID_DISPLAY_SELECT
+    {.port = 1, .pin = 28, .dir = true,   .state = true,   .modefunc = IOCON_FUNC0 | IOCON_MODE_INACT,},  // GPIO_ID_DISPLAY_DC
+    {.port = 1, .pin = 24, .dir = true,   .state = true,   .modefunc = IOCON_FUNC0 | IOCON_MODE_INACT,},  // GPIO_ID_DISPLAY_RESTART
+    {.port = 2, .pin = 6,  .dir = true,   .state = false,  .modefunc = IOCON_FUNC0 | IOCON_MODE_INACT,},  // GPIO_ID_NRF24L01_CE
+    {.port = 1, .pin = 23, .dir = true,   .state = true,   .modefunc = IOCON_FUNC0 | IOCON_MODE_INACT,},  // GPIO_ID_NRF24L01_CSN
+    {.port = 1, .pin = 9,  .dir = false,  .state = false, .modefunc = IOCON_FUNC0 | IOCON_MODE_PULLUP,}, // GPIO_ID_JOYSTICK_LEFT_SW
+    {.port = UINT8_MAX, .pin = UINT8_MAX, .dir = false, .state = false, .modefunc = IOCON_FUNC0 | IOCON_MODE_PULLUP,}, // GPIO_ID_JOYSTICK_RIGHT_SW
+    {.port = 0, .pin = 13, .dir = false,  .state = false, .modefunc = IOCON_FUNC0 | IOCON_MODE_PULLUP,}, // GPIO_ID_BUTTON_LEFT
+    {.port = 0, .pin = 14, .dir = false,  .state = false, .modefunc = IOCON_FUNC0 | IOCON_MODE_PULLUP,}, // GPIO_ID_BUTTON_RIGHT
 };
 
 /**********************************************************************************************************************
@@ -66,6 +71,16 @@ const gpio_item_t gpio_list[GPIO_ID_LAST] =
 /**********************************************************************************************************************
  * Prototypes of local functions
  *********************************************************************************************************************/
+/**
+ * @brief   Check if GPIO is enabled.
+ *
+ * @param   id      GPIO id. See @ref gpio_id_t.
+ *
+ * @return  GPIO enable/disable state.
+ * @retval  0   disabled.
+ * @retval  1   enabled.
+ */
+static bool gpio_is_enabled(gpio_id_t id);
 
 /**********************************************************************************************************************
  * Exported functions
@@ -78,6 +93,11 @@ void gpio_init(void)
 
     for(i = 0; i < GPIO_ID_LAST; i++)
     {
+        if(!gpio_is_enabled((gpio_id_t)i))
+        {
+            continue;
+        }
+
         Chip_GPIO_SetPinDIR(LPC_GPIO, gpio_list[i].port, gpio_list[i].pin, gpio_list[i].dir);
         if(gpio_list[i].dir == true)
         {
@@ -88,53 +108,97 @@ void gpio_init(void)
     return;
 }
 
-void gpio_output(gpio_id_t gpio)
+void gpio_output(gpio_id_t id)
 {
-    Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin);
+    if(!gpio_is_enabled(id))
+    {
+        return;
+    }
+
+    Chip_GPIO_SetPinDIROutput(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin);
 
     return;
 }
 
-void gpio_output_set(gpio_id_t gpio, bool state)
+void gpio_output_set(gpio_id_t id, bool state)
 {
-    Chip_GPIO_SetPinState(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin, state);
+    if(!gpio_is_enabled(id))
+    {
+        return;
+    }
+
+    Chip_GPIO_SetPinState(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin, state);
 
     return;
 }
 
-void gpio_output_low(gpio_id_t gpio)
+void gpio_output_low(gpio_id_t id)
 {
-    Chip_GPIO_SetPinState(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin, false);
+    if(!gpio_is_enabled(id))
+    {
+        return;
+    }
+
+    Chip_GPIO_SetPinState(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin, false);
 
     return;
 }
 
-void gpio_output_high(gpio_id_t gpio)
+void gpio_output_high(gpio_id_t id)
 {
-    Chip_GPIO_SetPinState(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin, true);
+    if(!gpio_is_enabled(id))
+    {
+        return;
+    }
+
+    Chip_GPIO_SetPinState(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin, true);
 
     return;
 }
 
-void gpio_output_toggle(gpio_id_t gpio)
+void gpio_output_toggle(gpio_id_t id)
 {
-    Chip_GPIO_SetPinToggle(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin);
+    if(!gpio_is_enabled(id))
+    {
+        return;
+    }
+
+    Chip_GPIO_SetPinToggle(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin);
 
     return;
 }
 
-void gpio_input(gpio_id_t gpio)
+void gpio_input(gpio_id_t id)
 {
-    Chip_GPIO_SetPinDIRInput(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin);
+    if(!gpio_is_enabled(id))
+    {
+        return;
+    }
+
+    Chip_GPIO_SetPinDIRInput(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin);
 
     return;
 }
 
-bool gpio_input_get(gpio_id_t gpio)
+bool gpio_input_get(gpio_id_t id)
 {
-    return Chip_GPIO_ReadPortBit(LPC_GPIO, gpio_list[gpio].port, gpio_list[gpio].pin);
+    if(!gpio_is_enabled(id))
+    {
+        return false;
+    }
+
+    return Chip_GPIO_ReadPortBit(LPC_GPIO, gpio_list[id].port, gpio_list[id].pin);
 }
 
 /**********************************************************************************************************************
  * Private functions
  *********************************************************************************************************************/
+static bool gpio_is_enabled(gpio_id_t id)
+{
+    if(gpio_list[id].port == UINT8_MAX || gpio_list[id].pin == UINT8_MAX)
+    {
+        return false;
+    }
+
+    return true;
+}
